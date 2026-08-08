@@ -21,4 +21,12 @@ conda activate jit-jittor
 python -m pip install -r /path/to/JiT/jit-jittor/requirements.txt
 ```
 
+## Dataset
+
+Download the [ImageNet](http://image-net.org/download) dataset and place it in your `IMAGENET_PATH`.
+
+## Checkpoints
+
+Download the official checkpoints from the [official JiT repository](https://github.com/LTH14/JiT).
+
 PyTorch and Jittor commands are provided in [RUNNING.md](RUNNING.md).
