@@ -1,0 +1,50 @@
+.DS_Store
+Thumbs.db
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Local environments and caches
+miniconda*/
+anaconda*/
+.cache/
+jittor_cache/
+*.egg-info/
+
+# Training data, model state, and generated outputs
+outputs/
+checkpoints/
+data/
+datasets/
+images/
+artifacts/
+*.pth
+*.pt
+*.ckpt
+*.npz
+*.part
+*.tar
+*.tar.gz
+*.zip
+
+# Logs and runtime traces
+*.log
+*.jsonl
+gpu_usage.csv
+events_*.jsonl
+resources_*.csv
+
+# FID reference statistics are documented by hash, not stored in Git.
+fid_stats/
+torch_reference/fid_stats/
+
+# Large upstream demo media is not required to run the code.
+torch_reference/demo/
