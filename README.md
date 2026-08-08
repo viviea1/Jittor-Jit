@@ -22,8 +22,6 @@ conda activate jit
 python -c "import torch; print(torch.__version__, torch.version.cuda)"
 ```
 
-`environment.yaml` pins PyTorch 2.5.1, torchvision 0.20.1, CUDA 12.4, NumPy 1.22, and the JiT-specific `torch-fidelity` package.
-
 ## Jittor environment
 
 ```bash
