@@ -21,4 +21,4 @@ conda activate jit-jittor
 python -m pip install -r /path/to/JiT/jit-jittor/requirements.txt
 ```
 
-PyTorch commands are provided in [RUNNING.md](RUNNING.md).
+PyTorch and Jittor commands are provided in [RUNNING.md](RUNNING.md).

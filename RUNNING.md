@@ -6,12 +6,16 @@ Define repository, dataset, output, and Python paths before running:
 export JIT_REPO=/path/to/JiT
 export IMAGENET_ROOT=/path/to/imagenet-1k
 export JIT_OUTPUT_ROOT=/path/to/jit-outputs
+export JIT_CHECKPOINT=/path/to/checkpoint-last.pth
 export TORCH_PY=/path/to/python
+export JITTOR_PY=/path/to/jittor-python
 ```
 
 The dataset must contain `"$IMAGENET_ROOT/train"` in ImageFolder format.
 
-## Single-GPU training
+## PyTorch
+
+### Single-GPU training
 
 ```bash
 cd "$JIT_REPO/jit-torch"
@@ -32,7 +36,7 @@ CUDA_VISIBLE_DEVICES=0 "$TORCH_PY" main_jit_accum.py \
   --data_path "$IMAGENET_ROOT"
 ```
 
-## Two-node training
+### Two-node training
 
 Run the following command on both nodes with the same shared paths and rendezvous address. Set `NODE_RANK=0` on the first node and `NODE_RANK=1` on the second.
 
@@ -63,7 +67,7 @@ torchrun --nnodes=2 --nproc_per_node=1 \
   --data_path "$IMAGENET_ROOT"
 ```
 
-## Checkpoint evaluation
+### Checkpoint evaluation
 
 `--resume` must point to a directory containing `checkpoint-last.pth`.
 
@@ -83,4 +87,110 @@ CUDA_VISIBLE_DEVICES=0 torchrun --standalone --nproc_per_node=1 main_jit.py \
   --resume /path/to/checkpoint-directory \
   --data_path "$IMAGENET_ROOT" \
   --evaluate_gen
+```
+
+## Jittor
+
+The included training entry point is a bounded benchmark. It exercises the
+forward pass, backward pass, FP32 master-weight AdamW update, gradient
+accumulation, distributed gradient averaging, and dual EMA, but it does not
+save a training checkpoint or implement a complete epoch schedule.
+
+### Checkpoint validation
+
+```bash
+cd "$JIT_REPO/jit-jittor"
+
+CUDA_VISIBLE_DEVICES=0 "$JITTOR_PY" infer.py \
+  --checkpoint "$JIT_CHECKPOINT" \
+  --dry-run
+```
+
+### Image generation
+
+```bash
+cd "$JIT_REPO/jit-jittor"
+
+CUDA_VISIBLE_DEVICES=0 "$JITTOR_PY" infer.py \
+  --checkpoint "$JIT_CHECKPOINT" \
+  --output-dir "$JIT_OUTPUT_ROOT/jittor-infer" \
+  --labels 0 207 999 \
+  --ema model_ema1 \
+  --steps 50 \
+  --method heun \
+  --cfg 3.0 \
+  --interval-min 0.1 \
+  --interval-max 1.0 \
+  --precision bf16 \
+  --no-cfg-batch
+```
+
+### FID-50K generation and evaluation
+
+```bash
+cd "$JIT_REPO/jit-jittor"
+
+CUDA_VISIBLE_DEVICES=0 "$JITTOR_PY" fid50k.py \
+  --checkpoint "$JIT_CHECKPOINT" \
+  --output-dir "$JIT_OUTPUT_ROOT/jittor-fid50k" \
+  --num-images 50000 \
+  --batch-size 64 \
+  --steps 50 \
+  --cfg 3.0 \
+  --interval-min 0.1 \
+  --interval-max 1.0 \
+  --seed 0 \
+  --ema model_ema1 \
+  --precision bf16 \
+  --resume
+
+CUDA_VISIBLE_DEVICES=0 "$TORCH_PY" evaluate_fid.py \
+  --input-dir "$JIT_OUTPUT_ROOT/jittor-fid50k/images" \
+  --stats "$JIT_REPO/jit-torch/fid_stats/jit_in256_stats.npz" \
+  --output "$JIT_OUTPUT_ROOT/jittor-fid50k/fid_results.json"
+```
+
+The same pipeline can be launched through `run_fid50k.sh` by defining
+`JIT_OUTPUT_DIR`, `JIT_CHECKPOINT`, `JITTOR_PY`, and `TORCH_PY`.
+
+### Single-GPU training benchmark
+
+```bash
+cd "$JIT_REPO/jit-jittor"
+
+CUDA_VISIBLE_DEVICES=0 "$JITTOR_PY" train_benchmark.py \
+  --data-path "$IMAGENET_ROOT/train" \
+  --checkpoint "$JIT_CHECKPOINT" \
+  --output-dir "$JIT_OUTPUT_ROOT/jittor-single-benchmark" \
+  --micro-batch 64 \
+  --accumulation-steps 16 \
+  --rounds 3 \
+  --steps-per-round 192 \
+  --num-workers 8 \
+  --lr 2e-4 \
+  --warmup-epochs 5
+```
+
+### Two-node training benchmark
+
+The repository and data paths must be available under the same paths on both
+nodes. Set `MPI_HOSTS` to two reachable hosts with one process per host.
+
+```bash
+export MPI_HOSTS=first-node.example:1,second-node.example:1
+
+cd "$JIT_REPO/jit-jittor"
+
+mpirun -np 2 --host "$MPI_HOSTS" --map-by ppr:1:node \
+  "$JITTOR_PY" train_benchmark.py \
+  --data-path "$IMAGENET_ROOT/train" \
+  --checkpoint "$JIT_CHECKPOINT" \
+  --output-dir "$JIT_OUTPUT_ROOT/jittor-two-node-benchmark" \
+  --micro-batch 64 \
+  --accumulation-steps 8 \
+  --rounds 3 \
+  --steps-per-round 192 \
+  --num-workers 12 \
+  --lr 2e-4 \
+  --warmup-epochs 5
 ```

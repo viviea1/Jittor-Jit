@@ -295,7 +295,7 @@ def parse_args():
     parser.add_argument("--log-every", type=int, default=10)
     parser.add_argument(
         "--monitor-script",
-        required=True,
+        default=None,
         help="Resource monitor accepting --pid, --output, and --interval.",
     )
     return parser.parse_args()
@@ -332,20 +332,22 @@ def main():
     resources_path = output_dir / f"resources_{hostname}.csv"
     event_handle = events_path.open("w", buffering=1, encoding="utf-8")
 
-    monitor = subprocess.Popen(
-        [
-            sys.executable,
-            args.monitor_script,
-            "--pid",
-            str(os.getpid()),
-            "--output",
-            str(resources_path),
-            "--interval",
-            "1.0",
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
+    monitor = None
+    if args.monitor_script:
+        monitor = subprocess.Popen(
+            [
+                sys.executable,
+                args.monitor_script,
+                "--pid",
+                str(os.getpid()),
+                "--output",
+                str(resources_path),
+                "--interval",
+                "1.0",
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
 
     total_started = time.perf_counter()
     try:
@@ -583,12 +585,13 @@ def main():
         )
     finally:
         event_handle.close()
-        monitor.terminate()
-        try:
-            monitor.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            monitor.kill()
-            monitor.wait()
+        if monitor is not None:
+            monitor.terminate()
+            try:
+                monitor.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                monitor.kill()
+                monitor.wait()
 
 
 if __name__ == "__main__":
