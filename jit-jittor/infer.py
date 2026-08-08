@@ -18,10 +18,10 @@ from PIL import Image
 from denoiser import Denoiser
 
 
-DEFAULT_CHECKPOINT = (
-    "/mnt/nfs/home/xutianyi/JiT/checkpoints/checkpoint-last.pth"
+DEFAULT_CHECKPOINT = os.environ.get(
+    "JIT_CHECKPOINT", "checkpoints/checkpoint-last.pth"
 )
-DEFAULT_OUTPUT = "/mnt/nfs/home/xutianyi/JiT/outputs/jittor-inference"
+DEFAULT_OUTPUT = os.environ.get("JIT_OUTPUT_DIR", "outputs/jittor-inference")
 
 
 class GpuMemoryMonitor:

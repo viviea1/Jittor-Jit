@@ -267,7 +267,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--data-path",
-        default="/mnt/nfs/home/xutianyi/datasets/imagenet-1k/train",
+        default=os.environ.get("IMAGENET_TRAIN", "data/imagenet/train"),
     )
     parser.add_argument(
         "--checkpoint",
@@ -279,7 +279,9 @@ def parse_args():
     )
     parser.add_argument(
         "--output-dir",
-        default="/mnt/nfs/home/xutianyi/JiT/outputs/jittor_b16_two_node_benchmark",
+        default=os.environ.get(
+            "JIT_OUTPUT_DIR", "outputs/jittor_b16_two_node_benchmark"
+        ),
     )
     parser.add_argument("--image-size", type=int, default=256)
     parser.add_argument("--micro-batch", type=int, default=128)
@@ -293,10 +295,8 @@ def parse_args():
     parser.add_argument("--log-every", type=int, default=10)
     parser.add_argument(
         "--monitor-script",
-        default=(
-            "/mnt/nfs/home/xutianyi/JiT/benchmarks/"
-            "jit_b16_a100/monitor_resources.py"
-        ),
+        required=True,
+        help="Resource monitor accepting --pid, --output, and --interval.",
     )
     return parser.parse_args()
 

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-OUT_DIR=/mnt/nfs/home/xutianyi/JiT/outputs/jittor-b16-256-fid50k
 REPO_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-JITTOR_PY=/home/xutianyi/miniconda3/envs/jit-jittor/bin/python
-TORCH_PY=/home/xutianyi/miniconda3/envs/jit-torch/bin/python
-CHECKPOINT=/mnt/nfs/home/xutianyi/JiT/checkpoints/checkpoint-last.pth
-FID_STATS=/home/xutianyi/JiT/jit-torch/fid_stats/jit_in256_stats.npz
+OUT_DIR=${JIT_OUTPUT_DIR:?Set JIT_OUTPUT_DIR to the FID output directory}
+JITTOR_PY=${JITTOR_PY:-python}
+TORCH_PY=${TORCH_PY:-python}
+CHECKPOINT=${JIT_CHECKPOINT:?Set JIT_CHECKPOINT to the model checkpoint}
+FID_STATS=${JIT_FID_STATS:-"$REPO_DIR/../jit-torch/fid_stats/jit_in256_stats.npz"}
 GPU_LOG="$OUT_DIR/gpu_usage.csv"
 RUN_LOG="$OUT_DIR/run.log"
 GEN_TIME_LOG="$OUT_DIR/generation_time.txt"
