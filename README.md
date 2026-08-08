@@ -1,6 +1,6 @@
 # JiT
 
-Code for training and evaluating JiT models on ImageNet.
+This repository is a Jittor port of [JiT](https://github.com/LTH14/JiT). The `/jit-torch` directory contains the reference version, while `/jit-jittor` contains the ported version.
 
 ## PyTorch environment
 
