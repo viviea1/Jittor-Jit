@@ -2,15 +2,6 @@
 
 Code for training and evaluating JiT models on ImageNet.
 
-## Repository layout
-
-```text
-jit-torch/
-jit-jittor/
-```
-
-ImageNet data, checkpoints, generated images, and experiment outputs are not stored in Git.
-
 ## PyTorch environment
 
 On a Linux/NVIDIA machine:
